@@ -83,7 +83,7 @@ export function setupGithubAuth(app: Express) {
     }
   }));
 
-  app.get("/api/auth/github", passport.authenticate("github", { scope: ["user"] }));
+  app.get("/api/auth/github", passport.authenticate("github", { scope: ["read:user"] }));
 
   app.get("/api/auth/github/callback",
     passport.authenticate("github", { 
