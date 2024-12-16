@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useGithubAuth } from "../hooks/use-github-auth";
 import { validateSolanaAddress } from "../lib/validate-solana";
+import { solanaService } from "../lib/solana-service";
 
 const walletSchema = z.object({
   address: z.string().refine(validateSolanaAddress, {
@@ -31,18 +32,37 @@ export default function ConnectWallet() {
 
   const mutation = useMutation({
     mutationFn: async (address: string) => {
-      const res = await fetch("/api/wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-        credentials: "include"
-      });
+      try {
+        // First derive the wallet for contract interaction
+        const keypair = await solanaService.deriveWallet(
+          "github/wallet",
+          user?.githubUsername || ""
+        );
 
-      if (!res.ok) {
-        throw new Error(await res.text());
+        // Update the mapping on the smart contract
+        const signature = await solanaService.updateGithubToWallet(
+          keypair,
+          user?.githubUsername || "",
+          address
+        );
+
+        // If contract interaction successful, update backend
+        const res = await fetch("/api/wallet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, signature }),
+          credentials: "include"
+        });
+
+        if (!res.ok) {
+          throw new Error(await res.text());
+        }
+
+        return res.json();
+      } catch (error) {
+        console.error("Failed to update wallet:", error);
+        throw error;
       }
-
-      return res.json();
     },
     onSuccess: () => {
       toast({

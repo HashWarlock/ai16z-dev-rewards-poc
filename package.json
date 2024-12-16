@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@phala/dstack-sdk": "^0.1.7",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -70,6 +71,7 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.0",
+    "vite-plugin-node-polyfills": "^0.22.0",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.23.8"
