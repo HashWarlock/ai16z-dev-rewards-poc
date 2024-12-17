@@ -50,9 +50,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  const baseUrl = process.env.REPLIT_DOMAINS ? 
-    `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` :
-    'http://localhost:5000';
+  // Use REPLIT_DOMAINS for OAuth callbacks as it contains the correct domain
+  const baseUrl = process.env.REPLIT_DOMAINS 
+    ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+    : 'http://localhost:5000';
 
   // GitHub Strategy
   passport.use('github', new GitHubStrategy({
@@ -92,8 +93,9 @@ export function registerRoutes(app: Express): Server {
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     callbackURL: `${baseUrl}/api/auth/discord/callback`,
-    scope: ['identify']
-  }, async (accessToken, refreshToken, profile, done) => {
+    scope: ['identify'],
+    passReqToCallback: true
+  }, async (req, accessToken, refreshToken, profile, done) => {
     try {
       // Check if user exists with this Discord ID
       let [user] = await db
