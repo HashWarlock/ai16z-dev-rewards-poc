@@ -63,27 +63,33 @@ export function registerRoutes(app: Express): Server {
     scope: ['user']
   }, async (accessToken, refreshToken, profile, done) => {
     try {
-      // Check if user exists with this GitHub ID
       let [user] = await db
         .select()
         .from(users)
         .where(eq(users.github_id, profile.id))
         .limit(1);
 
-      if (user) {
-        return done(null, user);
-      }
+      const userData = {
+        github_id: profile.id,
+        github_username: profile.username,
+        github_avatar_url: profile._json.avatar_url,
+        github_created_at: new Date(profile._json.created_at)
+      };
 
-      // Create new user with GitHub details
-      [user] = await db
-        .insert(users)
-        .values({
-          github_id: profile.id,
-          github_username: profile.username,
-          github_avatar_url: profile._json.avatar_url,
-          github_created_at: new Date(profile._json.created_at),
-        })
-        .returning();
+      if (user) {
+        // Update existing user with latest GitHub info
+        [user] = await db
+          .update(users)
+          .set(userData)
+          .where(eq(users.id, user.id))
+          .returning();
+      } else {
+        // Create new user
+        [user] = await db
+          .insert(users)
+          .values(userData)
+          .returning();
+      }
 
       done(null, user);
     } catch (err) {
@@ -96,19 +102,25 @@ export function registerRoutes(app: Express): Server {
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     callbackURL: `${baseUrl}/api/auth/discord/callback`,
-    scope: ['identify', 'guilds'],
+    scope: ['identify'],
     passReqToCallback: true
   }, async (req, accessToken, refreshToken, profile, done) => {
     try {
+      const discordData = {
+        discord_id: profile.id,
+        discord_username: profile.username,
+        discord_avatar_url: profile.avatar 
+          ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${profile.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256`
+          : null,
+        discord_created_at: new Date(Number(BigInt(profile.id) >> 22n) + 1420070400000),
+        updated_at: new Date()
+      };
+
       // If user is already logged in with GitHub, link the Discord account
       if (req.user) {
         const [updatedUser] = await db
           .update(users)
-          .set({
-            discord_id: profile.id,
-            discord_username: `${profile.username}#${profile.discriminator}`,
-            updated_at: new Date()
-          })
+          .set(discordData)
           .where(eq(users.id, req.user.id))
           .returning();
         return done(null, updatedUser);
@@ -122,21 +134,19 @@ export function registerRoutes(app: Express): Server {
         .limit(1);
 
       if (user) {
-        return done(null, user);
+        // Update existing user with latest Discord info
+        [user] = await db
+          .update(users)
+          .set(discordData)
+          .where(eq(users.id, user.id))
+          .returning();
+      } else {
+        // Create new user
+        [user] = await db
+          .insert(users)
+          .values(discordData)
+          .returning();
       }
-
-      // Create new user with Discord details
-      [user] = await db
-        .insert(users)
-        .values({
-          discord_id: profile.id,
-          discord_username: profile.username,
-          discord_avatar_url: profile.avatar 
-            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}${profile.avatar.startsWith('a_') ? '.gif' : '.png'}`
-            : null,
-          discord_created_at: new Date(parseInt(profile.id) / 4194304 + 1420070400000),
-        })
-        .returning();
 
       done(null, user);
     } catch (err) {
