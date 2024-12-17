@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   discord_id: text("discord_id").unique(),
   discord_username: text("discord_username"),
   discord_avatar_url: text("discord_avatar_url"),
+  github_created_at: timestamp("github_created_at"),
+  discord_created_at: timestamp("discord_created_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull()
 });

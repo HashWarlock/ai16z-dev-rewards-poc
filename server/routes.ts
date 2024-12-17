@@ -59,7 +59,8 @@ export function registerRoutes(app: Express): Server {
   passport.use('github', new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: `${baseUrl}/api/auth/github/callback`
+    callbackURL: `${baseUrl}/api/auth/github/callback`,
+    scope: ['user']
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       // Check if user exists with this GitHub ID
@@ -79,7 +80,8 @@ export function registerRoutes(app: Express): Server {
         .values({
           github_id: profile.id,
           github_username: profile.username,
-          github_avatar_url: profile._json.avatar_url || '',
+          github_avatar_url: profile._json.avatar_url,
+          github_created_at: new Date(profile._json.created_at),
         })
         .returning();
 
@@ -94,7 +96,7 @@ export function registerRoutes(app: Express): Server {
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     callbackURL: `${baseUrl}/api/auth/discord/callback`,
-    scope: ['identify'],
+    scope: ['identify', 'guilds'],
     passReqToCallback: true
   }, async (req, accessToken, refreshToken, profile, done) => {
     try {
@@ -132,6 +134,7 @@ export function registerRoutes(app: Express): Server {
           discord_avatar_url: profile.avatar 
             ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}${profile.avatar.startsWith('a_') ? '.gif' : '.png'}`
             : null,
+          discord_created_at: new Date(parseInt(profile.id) / 4194304 + 1420070400000),
         })
         .returning();
 

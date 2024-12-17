@@ -40,8 +40,8 @@ export default function Dashboard() {
                 <div className="aspect-square w-48 mx-auto mb-4 relative">
                   {user?.github_avatar_url ? (
                     <img 
-                      src={user.github_avatar_url} 
-                      alt={user.github_username}
+                      src={user.github_avatar_url}
+                      alt={user.github_username || 'GitHub Profile'}
                       className="rounded-lg border-4 border-zinc-800 sepia"
                     />
                   ) : (
@@ -58,7 +58,9 @@ export default function Dashboard() {
                   </div>
                   <div className="border-t-2 border-b-2 border-zinc-800 py-2 px-4 text-center">
                     <div className="text-sm uppercase tracking-wider">Developer Stats</div>
-                    <div className="font-mono mt-1">EST. {new Date(user?.created_at || '').getFullYear()}</div>
+                    <div className="font-mono mt-1">
+                      EST. {user?.github_created_at ? new Date(user.github_created_at).getFullYear() : '2024'}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -80,7 +82,7 @@ export default function Dashboard() {
                   <div className="aspect-square w-48 mx-auto mb-4 relative">
                     {user?.discord_avatar_url ? (
                       <img 
-                        src={user.discord_avatar_url} 
+                        src={user.discord_avatar_url}
                         alt={user.discord_username}
                         className="rounded-lg border-4 border-zinc-800 sepia"
                       />
@@ -98,7 +100,9 @@ export default function Dashboard() {
                     </div>
                     <div className="border-t-2 border-b-2 border-zinc-800 py-2 px-4 text-center">
                       <div className="text-sm uppercase tracking-wider">Community Stats</div>
-                      <div className="font-mono mt-1">EST. {new Date(user?.created_at || '').getFullYear()}</div>
+                      <div className="font-mono mt-1">
+                        EST. {user?.discord_created_at ? new Date(user.discord_created_at).getFullYear() : '2024'}
+                      </div>
                     </div>
                   </div>
                 </div>
