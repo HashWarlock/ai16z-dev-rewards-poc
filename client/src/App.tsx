@@ -2,14 +2,15 @@ import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import ConnectWallet from "./pages/ConnectWallet";
-import { useDiscordAuth } from "./hooks/use-discord-auth";
+import { useGithubAuth } from "./hooks/use-github-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SiDiscord } from "react-icons/si";
+import { SiGithub } from "react-icons/si";
+import LinkDiscord from "./pages/LinkDiscord";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
-  const { user, isLoading } = useDiscordAuth();
+  const { user, isLoading } = useGithubAuth();
 
   if (isLoading) {
     return (
@@ -25,18 +26,18 @@ function App() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <h1 className="text-3xl font-bold mb-6 bg-gradient-to-br from-primary to-purple-600 bg-clip-text text-transparent">
-              Connect Discord to Solana
+              Link GitHub to Discord
             </h1>
             <p className="text-muted-foreground mb-6">
-              Link your Discord account with your Solana wallet address for tip.cc bot payouts
+              Connect your GitHub account to get started
             </p>
             <Button
               size="lg"
               className="w-full"
-              onClick={() => window.location.href = "/api/auth/discord"}
+              onClick={() => window.location.href = "/api/auth/github"}
             >
-              <SiDiscord className="mr-2 h-5 w-5" />
-              Sign in with Discord
+              <SiGithub className="mr-2 h-5 w-5" />
+              Sign in with GitHub
             </Button>
           </CardContent>
         </Card>
@@ -47,8 +48,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Switch>
-        <Route path="/connect-wallet" component={ConnectWallet} />
-        <Route path="/" component={ConnectWallet} />
+        <Route path="/link-discord" component={LinkDiscord} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/" component={Dashboard} />
       </Switch>
       <Toaster />
     </QueryClientProvider>
