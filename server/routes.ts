@@ -164,7 +164,12 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/auth/logout", (req, res) => {
     req.logout(() => {
-      res.json({ success: true });
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: "Failed to clear session" });
+        }
+        res.json({ success: true });
+      });
     });
   });
 
