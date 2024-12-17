@@ -27,9 +27,10 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/db ./db
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
 # Install production dependencies only
-RUN npm ci --production
+RUN npm install
 
 # Set environment variables
 ENV NODE_ENV=production

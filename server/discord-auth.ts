@@ -6,6 +6,7 @@ import createMemoryStore from "memorystore";
 import { users } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
+import { Request } from "express";
 
 declare global {
   namespace Express {
@@ -53,15 +54,25 @@ export function setupDiscordAuth(app: Express) {
 
   const callbackURL = process.env.REPLIT_DOMAINS ? 
     `https://${process.env.REPLIT_DOMAINS.split(',')[0]}/api/auth/discord/callback` :
-    'http://localhost:5000/api/auth/discord/callback';
+    '/api/auth/discord/callback';
 
   passport.use(new DiscordStrategy({
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     callbackURL,
-    scope: ['identify']
-  }, async (accessToken, refreshToken, profile, done) => {
+    scope: ['identify'],
+    passReqToCallback: true,
+  }, async (req: Request, accessToken, refreshToken, profile, done) => {
     try {
+      // Dynamically construct the full callback URL
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const fullCallbackURL = `${protocol}://${host}/api/auth/discord/callback`;
+
+      // Update the callback URL for this request
+      const strategy = passport._strategies['discord'] as DiscordStrategy;
+      strategy._callbackURL = fullCallbackURL;
+
       let [user] = await db
         .select()
         .from(users)

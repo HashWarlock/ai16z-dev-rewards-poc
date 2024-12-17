@@ -6,6 +6,7 @@ import createMemoryStore from "memorystore";
 import { users } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
+import { Request } from "express";
 
 declare global {
   namespace Express {
@@ -53,14 +54,25 @@ export function setupGithubAuth(app: Express) {
 
   const callbackURL = process.env.REPLIT_DOMAINS ? 
     `https://${process.env.REPLIT_DOMAINS.split(',')[0]}/api/auth/github/callback` :
-    'http://localhost:5000/api/auth/github/callback';
+    '/api/auth/github/callback';
 
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL
-  }, async (accessToken, refreshToken, profile, done) => {
+    callbackURL,
+    scope: ['identify'],
+    passReqToCallback: true,
+  }, async (req: Request, accessToken, refreshToken, profile, done) => {
     try {
+      // Dynamically construct the full callback URL
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const fullCallbackURL = `${protocol}://${host}/api/auth/github/callback`;
+
+      // Update the callback URL for this request
+      const strategy = passport._strategies['github'] as GitHubStrategy;
+      strategy._callbackURL = fullCallbackURL;
+
       let [user] = await db
         .select()
         .from(users)
