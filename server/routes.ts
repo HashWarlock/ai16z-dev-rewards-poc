@@ -97,6 +97,20 @@ export function registerRoutes(app: Express): Server {
     passReqToCallback: true
   }, async (req, accessToken, refreshToken, profile, done) => {
     try {
+      // If user is already logged in with GitHub, link the Discord account
+      if (req.user) {
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            discord_id: profile.id,
+            discord_username: `${profile.username}#${profile.discriminator}`,
+            updated_at: new Date()
+          })
+          .where(eq(users.id, req.user.id))
+          .returning();
+        return done(null, updatedUser);
+      }
+
       // Check if user exists with this Discord ID
       let [user] = await db
         .select()
@@ -105,20 +119,6 @@ export function registerRoutes(app: Express): Server {
         .limit(1);
 
       if (user) {
-        return done(null, user);
-      }
-
-      // If user is authenticated with GitHub, link Discord account
-      if (done.req?.user) {
-        [user] = await db
-          .update(users)
-          .set({
-            discord_id: profile.id,
-            discord_username: `${profile.username}#${profile.discriminator}`,
-            updated_at: new Date()
-          })
-          .where(eq(users.id, done.req.user.id))
-          .returning();
         return done(null, user);
       }
 
