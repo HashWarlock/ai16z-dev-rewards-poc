@@ -24,33 +24,70 @@ export default function Dashboard() {
             <Button variant="ghost" onClick={handleLogout}>Logout</Button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <SiGithub className="h-5 w-5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{user?.github_username}</p>
-                <p className="text-xs text-muted-foreground">GitHub Account</p>
+          <div className="space-y-6">
+            {/* GitHub Card */}
+            <div className="p-6 rounded-lg border bg-card shadow-sm">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                  <SiGithub className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">GitHub Profile</h3>
+                  <p className="text-sm text-muted-foreground">Connected Account</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded">
+                  <span className="text-sm font-medium">Username</span>
+                  <span className="text-sm">{user?.github_username}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded">
+                  <span className="text-sm font-medium">Status</span>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    Connected
+                  </span>
+                </div>
               </div>
             </div>
 
-            {user?.discord_username ? (
-              <div className="flex items-center gap-3 p-3 rounded-lg border">
-                <SiDiscord className="h-5 w-5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{user?.discord_username}</p>
-                  <p className="text-xs text-muted-foreground">Discord Account</p>
+            {/* Discord Card */}
+            <div className="p-6 rounded-lg border bg-card shadow-sm">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-10 w-10 rounded-full bg-zinc-100 flex items-center justify-center">
+                  <SiDiscord className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Discord Profile</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {user?.discord_username ? 'Connected Account' : 'Not Connected'}
+                  </p>
                 </div>
               </div>
-            ) : (
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.location.href = "/api/auth/discord"}
-              >
-                <SiDiscord className="mr-2 h-5 w-5" />
-                Link Discord Account
-              </Button>
-            )}
+              
+              {user?.discord_username ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded">
+                    <span className="text-sm font-medium">Username</span>
+                    <span className="text-sm">{user?.discord_username}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded">
+                    <span className="text-sm font-medium">Status</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      Connected
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-2"
+                  onClick={() => window.location.href = "/api/auth/discord"}
+                >
+                  <SiDiscord className="mr-2 h-5 w-5" />
+                  Connect Discord Account
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
