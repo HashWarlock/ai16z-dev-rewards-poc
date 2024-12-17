@@ -79,6 +79,7 @@ export function registerRoutes(app: Express): Server {
         .values({
           github_id: profile.id,
           github_username: profile.username,
+          github_avatar_url: profile.photos?.[0]?.value || '',
         })
         .returning();
 
@@ -128,6 +129,7 @@ export function registerRoutes(app: Express): Server {
         .values({
           discord_id: profile.id,
           discord_username: `${profile.username}#${profile.discriminator}`,
+          discord_avatar_url: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
         })
         .returning();
 
