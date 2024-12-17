@@ -3,11 +3,11 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  githubId: text("github_id").unique().notNull(),
-  githubUsername: text("github_username").notNull(),
-  solanaAddress: text("solana_address"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  discord_id: text("discord_id").unique().notNull(),
+  discord_username: text("discord_username").notNull(),
+  solana_address: text("solana_address"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull()
 });
 
 export const insertUserSchema = createInsertSchema(users);

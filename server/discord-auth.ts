@@ -1,21 +1,23 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { users } from "@db/schema";
-import { db } from "@db";
-import { eq } from "drizzle-orm";
 import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { PublicKey } from "@solana/web3.js";
-import { type SelectUser } from "@db/schema";
+import { users } from "@db/schema";
+import { db } from "@db";
+import { eq } from "drizzle-orm";
 
-export function registerRoutes(app: Express): Server {
+declare global {
+  namespace Express {
+    interface User extends Record<string, any> {}
+  }
+}
+
+export function setupDiscordAuth(app: Express) {
   if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
     throw new Error("Discord OAuth credentials not configured");
   }
 
-  // Set up session management
   const MemoryStore = createMemoryStore(session);
   app.use(session({
     secret: process.env.REPL_ID || "discord-solana-auth",
@@ -63,15 +65,15 @@ export function registerRoutes(app: Express): Server {
       let [user] = await db
         .select()
         .from(users)
-        .where(eq(users.discord_id, profile.id))
+        .where(eq(users.discordId, profile.id))
         .limit(1);
 
       if (!user) {
         [user] = await db
           .insert(users)
           .values({
-            discord_id: profile.id,
-            discord_username: `${profile.username}#${profile.discriminator}`,
+            discordId: profile.id,
+            discordUsername: `${profile.username}#${profile.discriminator}`,
           })
           .returning();
       }
@@ -82,8 +84,8 @@ export function registerRoutes(app: Express): Server {
     }
   }));
 
-  // Discord auth routes
   app.get("/api/auth/discord", passport.authenticate("discord"));
+
   app.get("/api/auth/discord/callback",
     passport.authenticate("discord", { 
       failureRedirect: "/",
@@ -91,57 +93,9 @@ export function registerRoutes(app: Express): Server {
     })
   );
 
-  // Get current user
-  app.get("/api/user", (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("Not authenticated");
-    }
-    res.json(req.user);
-  });
-
-  // Update Solana wallet address
-  app.post("/api/wallet", async (req, res) => {
-    if (!req.user) {
-      return res.status(401).send("Not authenticated");
-    }
-
-    const { address } = req.body;
-    
-    // Validate Solana address
-    try {
-      new PublicKey(address);
-    } catch (err) {
-      return res.status(400).send("Invalid Solana address");
-    }
-
-    try {
-      const [updated] = await db
-        .update(users)
-        .set({ 
-          solanaAddress: address,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, req.user.id))
-        .returning();
-
-      res.json(updated);
-    } catch (err) {
-      res.status(500).send("Failed to update wallet address");
-    }
-  });
-
   app.post("/api/auth/logout", (req, res) => {
     req.logout(() => {
       res.json({ success: true });
     });
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
-}
-
-declare global {
-  namespace Express {
-    interface User extends SelectUser {}
-  }
 }
